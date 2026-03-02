@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+	<h1>{{ title }}</h1>
+	<hr>
+	{% block table %}{% endblock %}
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/v/bs5/jq-3.7.0/dt-2.1.8/date-1.5.4/r-3.0.3/sb-1.8.1/datatables.min.js"></script>
+<script src="https://cdn.datatables.net/plug-ins/2.3.7/features/deepLink/dataTables.deepLink.min.js"></script>
+{% block scripts %}{% endblock %}
+{% endblock %}

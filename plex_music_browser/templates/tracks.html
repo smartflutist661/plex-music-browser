@@ -1,0 +1,148 @@
+{% extends "table.html" %}
+
+{% block table %}
+<select name="unrated" id="unrated">
+	<option selected value="null">All Tracks</option>
+	<option value="true">Unrated Tracks</option>
+	<option value="false">Rated Tracks</option>
+</select>
+
+<table id="tracks">
+	<thead>
+		<tr>
+			<th>Title</th>
+			<th>Album</th>
+			<th>Artist</th>
+			<th>Rating</th>
+			<th>Rated At</th>
+			<th>Genres</th>
+			<th>Styles</th>
+		</tr>
+	</thead>
+	<tbody>
+	</tbody>
+</table>
+{% endblock %}
+
+{% block scripts %}
+<script>
+	$(document).ready(function () {
+		var config = {
+			serverSide: true,
+			lengthChange: true,
+			responsive: true,
+			ajax: {
+				url: "api/data",
+				data: {
+					query_type: "tracks",
+					artist_id: "{{ artist_id }}",
+					album_id: "{{ album_id }}",
+					unrated: function () {
+						return $('#unrated').val().toString();
+					},
+				},
+			},
+			columns: [
+				{
+					data: "track",
+					searchBuilderType: "string",
+					render: function (_, __, row, ___) {
+						return "<a href={{ url_for('tracks') }}?id=" + row.id + ">" + row.track + "</a>"
+					}
+				},
+				{
+					data: "album",
+					searchBuilderType: "string",
+					render: function (_, __, row, ___) {
+						return "<a href={{ url_for('albums') }}?id=" + row.album_id + ">" + row.album + "</a>"
+					}
+				},
+				{
+					data: "artist",
+					searchBuilderType: "string",
+					render: function (_, __, row, ___) {
+						return "<a href={{ url_for('artists') }}?id=" + row.artist_id + ">" + row.artist + "</a>"
+					}
+				},
+				{ data: "rating", searchable: false, searchBuilderType: "num" },
+				{ data: "last_rated_at", searchable: false, searchBuilderType: "date" },
+				{
+					data: "genres",
+					searchBuilderType: "string",
+					render: function (_, __, row, ___) {
+						if (!row.genres) {
+							return null
+						}
+						var cell = "<ul>";
+						for (const genre of row.genres) {
+							cell += "<li>" + genre + "</li>";
+						}
+						cell += "</ul>"
+						return cell;
+					}
+				},
+				{
+					data: "styles",
+					searchBuilderType: "string",
+					render: function (_, __, row, ___) {
+						if (!row.styles) {
+							return null
+						}
+						var cell = "<ul>";
+						for (const style of row.styles) {
+							cell += "<li>" + style + "</li>";
+						}
+						cell += "</ul>"
+						return cell;
+					}
+				},
+			],
+			order: [
+				[2, 'asc'],
+				[1, 'asc']
+			],
+			layout: {
+				top: {
+					searchBuilder: {
+						columns: [0, 1, 2, 3, 4, 5, 6],
+						greyscale: true,
+						depthLimit: 10
+					}
+				}
+			},
+			language: {
+				searchBuilder: { title: "<h3>Advanced Search</h3>" }
+			}
+		};
+
+		var queryConfig = $.fn.dataTable.ext.deepLink([
+			'order', 'searchBuilder.criteria', 'searchBuilder.logic'
+		]);
+		if (queryConfig?.searchBuilder?.criteria || queryConfig?.searchBuilder?.logic) {
+			config.layout.top.searchBuilder.preDefined = {};
+		}
+		if (queryConfig?.searchBuilder?.criteria) {
+			config.layout.top.searchBuilder.preDefined.criteria = queryConfig.searchBuilder.criteria;
+		}
+		if (queryConfig?.searchBuilder?.logic) {
+			config.layout.top.searchBuilder.preDefined.logic = queryConfig.searchBuilder.logic;
+		}
+		if (queryConfig?.order) {
+			config.order = queryConfig.order;
+		}
+		var table = $('#tracks').DataTable(
+			config
+		);
+
+		table.on('responsive-resize', function (_, __, ____) {
+			$('tr').each(function () { $(this).find('td:visible:last').addClass('last-visible-td') });
+		});
+
+		$('#unrated').change(function () {
+			table.draw();
+		});
+	});
+
+
+</script>
+{% endblock %}

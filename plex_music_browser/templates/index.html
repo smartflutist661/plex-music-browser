@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="index">
+	<img src="{{ url_for('static', filename='logo.png') }}" />
+	<p>Go to <a href={{ url_for('tracks') }}>Tracks</a> to view a list of tracks.</p>
+	<p>Go to <a href={{ url_for('albums') }}>Albums</a> to view a list of albums.</p>
+	<p>Go to <a href={{ url_for('artists') }}>Artists</a> to view a list of artists.</p>
+</div>
+{% endblock %}
+
+{% block scripts %}{% endblock %}

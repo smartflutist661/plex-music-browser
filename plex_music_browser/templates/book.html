@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="book"><img src="data:image/png;base64,{{ book['cover'] }}" />
+	<hr />
+	<h4>{{ book['title'] }} by <a href="{{ url_for('authors') }}?id={{ book['author_id'] }}">{{ book['author'] }}</a>
+	</h4>
+	{% if book['series_number_chron'] is not none %}
+		<h5>
+			Book {{book['series_number']|int}}
+			of <a href="{{ url_for('series') }}?id={{ book['series_id'] }}">{{ book['series'] }}</a>
+		</h5>
+	{% endif %}
+	{% if book['series_number_chron'] is not none and book['series_number_chron'] >= 0 %}
+		<h5>Book {{ book['series_number_chron']|int }} of the internal chronology</h5>
+	{% endif %}
+	{{ book['description']|safe }}
+</div>
+{% endblock %}

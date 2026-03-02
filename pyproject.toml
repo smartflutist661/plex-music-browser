@@ -1,0 +1,35 @@
+[project]
+name = "plex-music-browser"
+readme = "README.md"
+version = "0.0.0"
+requires-python = ">=3.10"
+
+dependencies = ["flask~=3.0", "pydantic~=2.10", "python-dotenv~=1.0"]
+
+[dependency-groups]
+dev = ["black", "flake8-print>=5", "isort", "mypy", "pylint>=3.3.3", "pytest"]
+
+[project.scripts]
+test-app = "plex_music_browser.__main__:main"
+
+[tool.uv]
+package = true
+
+[tool.isort]
+profile = "black"
+line_length = 99
+combine_as_imports = true
+force_grid_wrap = 2
+
+[tool.black]
+line_length = 99
+
+[tool.mypy]
+warn_no_return = true
+warn_unreachable = true
+strict = true
+allow_subclassing_any = true
+
+[tool.pylint]
+logging-format-style = "new"
+disable = "logging-fstring-interpolation"

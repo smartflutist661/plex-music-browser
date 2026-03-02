@@ -1,0 +1,10 @@
+#!/bin/bash
+
+isort .
+black .
+flake8 --select T201 plex_music_browser
+pylint -d C,R plex_music_browser
+pylint -d C,R tests
+mypy -p plex_music_browser
+mypy -p tests
+pytest
