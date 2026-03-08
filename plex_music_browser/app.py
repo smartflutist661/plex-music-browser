@@ -17,6 +17,11 @@ from flask.globals import request
 from flask.templating import render_template
 from flask.wrappers import Response
 
+from plex_music_browser.models.album import Album
+from plex_music_browser.models.datatable_request import (
+    datatable_request_to_search_criteria,
+    datatable_request_to_sort_criteria,
+)
 from plex_music_browser.models.datatable_responses import (
     AlbumsResponse,
     ArtistsResponse,
@@ -28,6 +33,13 @@ from plex_music_browser.queries.queries import (
     get_by_id,
     get_items,
     get_total,
+)
+from plex_music_browser.search import (
+    IntSearchParam,
+    SearchColumn,
+    SearchCondition,
+    SearchCriteria,
+    TwoParameterCriterion,
 )
 
 load_dotenv(Path(__file__).parents[1] / ".env")
@@ -74,8 +86,41 @@ def certbot(token: str) -> str:
 
 
 @APP.route("/")
-def index() -> str:
-    return render_template("index.html", title="Home")
+def index() -> str | Response:
+    now = datetime.now()
+    start_of_this_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    end_of_last_month = start_of_this_month - timedelta(days=1)
+    start_of_last_month = end_of_last_month.replace(day=1)
+
+    search_criteria = SearchCriteria(
+        basic_search_string=None,
+        advanced_search={
+            "AND": [
+                TwoParameterCriterion(
+                    SearchColumn("last_rated_at"),
+                    SearchCondition("between"),
+                    IntSearchParam(int(start_of_last_month.timestamp())),
+                    IntSearchParam(int(end_of_last_month.timestamp())),
+                )
+            ]
+        },
+    )
+    cur = get_db().cursor()
+    filtered_items = get_items(
+        search_criteria,
+        sort_criteria=None,
+        query_type="albums",
+        db_cursor=cur,
+        artist_id=None,
+        album_id=None,
+        unrated=False,
+    )
+    cur.close()
+
+    if isinstance(filtered_items, Response):
+        return filtered_items
+
+    return render_template("index.html", title="Home", plot="")
 
 
 @APP.route("/tracks")
@@ -138,7 +183,7 @@ def albums() -> str | Response:
 
 
 # TODO: Cover collages for artists?
-@APP.route("/api/data")
+@APP.route("/api/datatables")
 def data() -> TracksResponse | ArtistsResponse | AlbumsResponse | Response:
 
     query_type = cast(QueryType, request.args.get("query_type", type=str))
@@ -151,7 +196,13 @@ def data() -> TracksResponse | ArtistsResponse | AlbumsResponse | Response:
     if isinstance(total, Response):
         return total
 
-    filtered_items = get_items(request, query_type, cur, artist_id, album_id, unrated)
+    search_criteria = datatable_request_to_search_criteria(request)
+    if isinstance(search_criteria, Response):
+        return search_criteria
+    sort_criteria = datatable_request_to_sort_criteria(request)
+    filtered_items = get_items(
+        search_criteria, sort_criteria, query_type, cur, artist_id, album_id, unrated
+    )
     cur.close()
 
     if isinstance(filtered_items, Response):

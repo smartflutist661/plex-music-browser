@@ -9,16 +9,20 @@ from typing import (
     overload,
 )
 
-from flask.wrappers import (
-    Request,
-    Response,
-)
+from flask.wrappers import Response
 
 from plex_music_browser.models.album import Album
 from plex_music_browser.models.artist import Artist
 from plex_music_browser.models.track import Track
-from plex_music_browser.search import build_search
-from plex_music_browser.sort import build_sort
+from plex_music_browser.search import (
+    SearchColumn,
+    SearchCriteria,
+    build_search,
+)
+from plex_music_browser.sort import (
+    SortCriteria,
+    build_sort,
+)
 
 QueryType = Literal["tracks", "albums", "artists"]
 
@@ -128,17 +132,18 @@ def get_total(
 
 
 def get_items(
-    request: Request,
+    search_criteria: SearchCriteria,
+    sort_criteria: Optional[SortCriteria],
     query_type: QueryType,
     db_cursor: Cursor,
-    author_id: Optional[int],
-    series_id: Optional[int],
+    artist_id: Optional[int],
+    album_id: Optional[int],
     unrated: Optional[bool],
 ) -> list[Track] | list[Artist] | list[Album] | Response:
 
     query = get_query_base(query_type) + f" SELECT * from {query_type}"
 
-    query_terms, query_params = get_base_query_params(query_type, author_id, series_id, unrated)
+    query_terms, query_params = get_base_query_params(query_type, artist_id, album_id, unrated)
 
     if query_type == "tracks":
         valid_columns = Track.__annotations__.keys()
@@ -152,7 +157,7 @@ def get_items(
     else:
         raise ValueError(f"Unrecognized query type {query_type}, unable to retrieve valid columns")
 
-    search = build_search(request, valid_columns)
+    search = build_search(search_criteria, {SearchColumn(col) for col in valid_columns})
     if isinstance(search, Response):
         return search
 
@@ -173,7 +178,10 @@ def get_items(
     if search is not None and len(query_terms) > 0:
         query += ")"
 
-    query += build_sort(request)
+    if sort_criteria is not None:
+        query += build_sort(sort_criteria)
+    else:
+        query += ";"
 
     db_cursor.execute(query, query_params)
 

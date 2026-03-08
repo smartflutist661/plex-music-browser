@@ -1,4 +1,9 @@
-from flask.wrappers import Request
+from collections.abc import Iterable
+from dataclasses import dataclass
+from typing import (
+    Literal,
+    NewType,
+)
 
 MAX_SORT_COLS = 3
 SORT_COLS = (
@@ -10,25 +15,23 @@ SORT_COLS = (
     "last_rated_at",
 )
 
+SortColumn = NewType("SortColumn", str)
+SortDirection = Literal["asc", "desc"]
 
-def build_sort(request: Request) -> str:
-    # sort
+
+@dataclass
+class SortCriterion:
+    column: SortColumn
+    direction: SortDirection
+
+
+@dataclass
+class SortCriteria:
+    sorts: Iterable[SortCriterion]
+
+
+def build_sort(sort_criteria: SortCriteria) -> str:
     sorts = []
-    for sort_col_num in range(MAX_SORT_COLS):
-        sort_col_index = request.args.get(f"order[{sort_col_num}][column]")
-        if sort_col_index is None and sort_col_num > 0:
-            break
-        sort_col_name = request.args.get(f"columns[{sort_col_index}][data]")
-        # Specify allowed sort parameters to prevent SQL injection
-        # Can't parameterize "order by"
-        if sort_col_name not in SORT_COLS or sort_col_name == "artist":
-            sort_col_name = "artist_sort"
-        elif sort_col_name == "track":
-            sort_col_name = "track_sort"
-        elif sort_col_name == "album":
-            sort_col_name = "album_sort"
-        sort_direction = request.args.get(f"order[{sort_col_num}][dir]")
-        if sort_direction not in ("asc", "desc"):
-            sort_direction = "asc"
-        sorts.append(f"{sort_col_name} {sort_direction}")
+    for sort in sort_criteria.sorts:
+        sorts.append(f"{sort.column} {sort.direction}")
     return " order by " + ", ".join(sorts) + ";"
