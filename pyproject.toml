@@ -2,12 +2,27 @@
 name = "plex-music-browser"
 readme = "README.md"
 version = "0.0.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
-dependencies = ["flask~=3.0", "pydantic~=2.10", "python-dotenv~=1.0"]
+dependencies = [
+    "flask~=3.0",
+    "pandas~=3.0",
+    "plotly~=6.6",
+    "pydantic~=2.10",
+    "python-dotenv~=1.0",
+]
 
 [dependency-groups]
-dev = ["black", "flake8-print>=5", "isort", "mypy", "pylint>=3.3.3", "pytest"]
+dev = [
+    "black",
+    "flake8-print>=5",
+    "isort",
+    "mypy",
+    "pandas-stubs",
+    "plotly-stubs",
+    "pylint>=3.3.3",
+    "pytest",
+]
 
 [project.scripts]
 test-app = "plex_music_browser.__main__:main"
