@@ -1,19 +1,18 @@
-# readerware-browser
+# plex-music-browser
 
-A web interface for browsing a Readerware library built on a PostgreSQL backend.
-Using an external DB requires client-server version of Readerware; tested with Readerware 4.31.
+A web interface for browsing some basic music metadata from a Plex SQLite database, mostly for visualization purposes.
+Tested with Plex Server version 1.43.0.10492.
 
 ## Configuration
 
-Place the database name, username, and password in `.env` in the top level of this repository:
+Copy the Plex database file to your webroot. Place the database filename and numeric ID of the library you want to browse in `.env` in the top level of this repository:
 
 ```
-DB_NAME=<name>
-DB_USERNAME=<username>
-DB_PASSWORD=<password>
+DB_FILE=</full/path/to/file>
+LIBRARY_ID=<libraryID>
 ```
 
-You may also configure `DB_HOST` and `DB_PORT`. They default to `localhost` and `5432`.
+If you want a permanent installation to update regularly, one option is setting up a cron job to copy the database file as often as you want to refresh the data.
 
 It's a [WSGI](https://wsgi.readthedocs.io/en/latest/what.html) application, host in your preferred manner.
 An example configuration for WAN access using Apache is provided.
@@ -23,12 +22,11 @@ An example configuration for WAN access using Apache is provided.
 Install the [Apache2 webserver](https://httpd.apache.org/download.cgi), if you don't already have one.
 
 Install the application requirements in a Python virtual environment (you _can_ use the system environment, but it's not recommended).
-`uv` is recommended, e.g. from your home directory:
+`uv` is recommended, e.g. from the repository:
 
 ```bash
-pip install uv
-uv venv
-uv pip install -r <path/to/repo>/pyproject.toml
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv sync
 ```
 
 Place a `wsgi-file` with the following contents in a folder the Apache daemon has access to, e.g. `/var/www/html`:
@@ -36,15 +34,15 @@ Place a `wsgi-file` with the following contents in a folder the Apache daemon ha
 ```
 import sys
 
-sys.path.insert(0, '</absolute/path/to/this/repo>/readerware-browser')
+sys.path.insert(0, '</absolute/path/to/this/repo>/plex-music-browser')
 sys.path.insert(0, '</absolute/path/to/python/site-packages>')
 
-from readerware_browser import APP as application
+from plex_music_browser import APP as application
 ```
 
 Enable the Apache WSGI module: `a2enmod wsgi`
 
-Create a `readerware.conf` file in `/etc/apache2/sites-available/` with contents like:
+Create a configuration file in `/etc/apache2/sites-available/` with contents like:
 
 ```
 <VirtualHost *:80>
@@ -73,9 +71,10 @@ Create a `readerware.conf` file in `/etc/apache2/sites-available/` with contents
 ```
 
 This configuration assumes you want to enable SSL and prevent plain HTTP connections.
+This application supports webroot-based ACME HTTP01 challenges if you're unable to complete any other types of challenge.
 You may need to add `WEBROOT=<your-webroot>` to the `.env` file (default `/var/www/html`);
 then set up and enable a LetsEncrypt SSL certificate using [certbot](https://certbot.eff.org/instructions?ws=apache&os=snap) for your server domain.
 
-Enable the site: `a2ensite readerware`
+Enable the site: `a2ensite <conf-name>`
 
 Then restart the Apache2 service: `service apache2 restart`
