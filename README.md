@@ -26,19 +26,24 @@ Install the application requirements in a Python virtual environment (you _can_ 
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
+uv python pin <version>
 uv sync
 ```
+
+You should pin the Python version your `wsgi_mod` is using, which can be found in the Apache logs or by checking the linked Python libs (`ldd /path/to/your/mod_wsgi.so`).
 
 Place a `wsgi-file` with the following contents in a folder the Apache daemon has access to, e.g. `/var/www/html`:
 
 ```
 import sys
 
-sys.path.insert(0, '</absolute/path/to/this/repo>/plex-music-browser')
-sys.path.insert(0, '</absolute/path/to/python/site-packages>')
+sys.path.insert(0, '</absolute/path/to/this/repo>')
+sys.path.insert(0, '</absolute/path/to/this/repo>/.venv/lib/python<version>/site-packages')
 
 from plex_music_browser import APP as application
 ```
+
+The paths assume you have used `uv` to install dependencies.
 
 Enable the Apache WSGI module: `a2enmod wsgi`
 
