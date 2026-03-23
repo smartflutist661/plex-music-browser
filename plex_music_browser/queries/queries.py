@@ -131,14 +131,50 @@ def get_total(
     return Response(f"No {query_type} found", 404)
 
 
+@overload
 def get_items(
     search_criteria: SearchCriteria,
     sort_criteria: Optional[SortCriteria],
-    query_type: QueryType,
     db_cursor: Cursor,
     artist_id: Optional[int],
     album_id: Optional[int],
     unrated: Optional[bool],
+    query_type: Literal["tracks"],
+) -> list[Track] | Response: ...
+
+
+@overload
+def get_items(
+    search_criteria: SearchCriteria,
+    sort_criteria: Optional[SortCriteria],
+    db_cursor: Cursor,
+    artist_id: Optional[int],
+    album_id: Optional[int],
+    unrated: Optional[bool],
+    query_type: Literal["albums"],
+) -> list[Album] | Response: ...
+
+
+@overload
+def get_items(
+    search_criteria: SearchCriteria,
+    sort_criteria: Optional[SortCriteria],
+    db_cursor: Cursor,
+    artist_id: Optional[int],
+    album_id: Optional[int],
+    unrated: Optional[bool],
+    query_type: Literal["artists"],
+) -> list[Artist] | Response: ...
+
+
+def get_items(
+    search_criteria: SearchCriteria,
+    sort_criteria: Optional[SortCriteria],
+    db_cursor: Cursor,
+    artist_id: Optional[int],
+    album_id: Optional[int],
+    unrated: Optional[bool],
+    query_type: QueryType,
 ) -> list[Track] | list[Artist] | list[Album] | Response:
 
     query = get_query_base(query_type) + f" SELECT * from {query_type}"

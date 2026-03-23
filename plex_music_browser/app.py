@@ -1,16 +1,11 @@
 import json
 import os
-import sqlite3
-from datetime import datetime
 from pathlib import Path
-from sqlite3 import Connection
 from typing import (
     Optional,
     cast,
 )
 
-import pandas
-import plotly.express as px
 from dotenv import load_dotenv
 from flask import (
     Flask,
@@ -20,6 +15,7 @@ from flask.globals import request
 from flask.templating import render_template
 from flask.wrappers import Response
 
+from plex_music_browser.database import get_db
 from plex_music_browser.models.datatable_request import (
     datatable_request_to_search_criteria,
     datatable_request_to_sort_criteria,
@@ -30,23 +26,12 @@ from plex_music_browser.models.datatable_responses import (
     TracksResponse,
 )
 from plex_music_browser.pagination import paginate
+from plex_music_browser.plotting import generate_plots
 from plex_music_browser.queries.queries import (
     QueryType,
     get_by_id,
     get_items,
     get_total,
-)
-from plex_music_browser.search import (
-    IntSearchParam,
-    OneParameterCriterion,
-    SearchColumn,
-    SearchCondition,
-    SearchCriteria,
-)
-from plex_music_browser.sort import (
-    SortColumn,
-    SortCriteria,
-    SortCriterion,
 )
 
 load_dotenv(Path(__file__).parents[1] / ".env")
@@ -54,14 +39,6 @@ load_dotenv(Path(__file__).parents[1] / ".env")
 LIBRARY_ID = int(os.environ["LIBRARY_ID"])
 
 APP: Flask = Flask(__name__)
-
-
-def get_db() -> Connection:
-    db = getattr(g, "_database", None)
-    if db is None:
-        db = g._database = sqlite3.connect(os.environ["DB_FILE"])
-        db.row_factory = sqlite3.Row
-    return db
 
 
 @APP.teardown_appcontext
@@ -90,80 +67,6 @@ def certbot(token: str) -> str:
 
     with open(f"{webroot}/.well-known/acme-challenge/" + token, encoding="utf8") as token_file:
         return token_file.read()
-
-
-def generate_plots() -> str | Response:
-    this_year = datetime.today().year
-    start_time = datetime(this_year, 1, 1)
-
-    search_criteria = SearchCriteria(
-        basic_search_string=None,
-        advanced_search={
-            "AND": [
-                OneParameterCriterion(
-                    SearchColumn("last_rated_at"),
-                    SearchCondition(">"),
-                    IntSearchParam(int(start_time.timestamp())),
-                )
-            ]
-        },
-    )
-    cur = get_db().cursor()
-    filtered_items = get_items(
-        search_criteria,
-        sort_criteria=SortCriteria([SortCriterion(SortColumn("last_rated_at"), "asc")]),
-        query_type="albums",
-        db_cursor=cur,
-        artist_id=None,
-        album_id=None,
-        unrated=False,
-    )
-    cur.close()
-
-    if isinstance(filtered_items, Response):
-        return filtered_items
-
-    albums_df = pandas.DataFrame(item.model_dump() for item in filtered_items)
-    albums_df["month"] = albums_df["last_rated_at"].dt.strftime("%b")
-    grouped_by_month = (
-        albums_df.groupby(by=["month", "rating"])
-        .agg(
-            count=pandas.NamedAgg(column="album", aggfunc="count"),
-        )
-        .reset_index()
-    )
-    grouped_by_month["rating"] = grouped_by_month["rating"].astype(str)
-
-    # TODO: Add avg rating line plot overlay?
-    # TODO: Better color
-    fig1 = px.bar(
-        grouped_by_month,
-        title="Albums rated by month",
-        x="month",
-        y="count",
-        color="rating",
-        template="seaborn+presentation",  # type: ignore[arg-type] # presentation is an add-on
-        category_orders={
-            "month": [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "June",
-                "July",
-                "Aug",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dec",
-            ]
-        },
-        # hover_data="album",
-    )
-    # TODO: Loop through raw table grouped by month to create tabs(?) with datatable each
-    # TODO: Table by genre
-    return fig1.to_html(full_html=False, include_plotlyjs=False)
 
 
 @APP.route("/")
@@ -252,7 +155,13 @@ def data() -> TracksResponse | ArtistsResponse | AlbumsResponse | Response:
         return search_criteria
     sort_criteria = datatable_request_to_sort_criteria(request)
     filtered_items = get_items(
-        search_criteria, sort_criteria, query_type, cur, artist_id, album_id, unrated
+        search_criteria,
+        sort_criteria,
+        cur,
+        artist_id,
+        album_id,
+        unrated,
+        query_type,
     )
     cur.close()
 
