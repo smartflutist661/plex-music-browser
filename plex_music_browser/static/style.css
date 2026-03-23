@@ -72,7 +72,8 @@ tr a:hover {
 	justify-content: center;
 }
 
-.book h4, .book h5 {
+.book h4,
+.book h5 {
 	text-align: center;
 }
 
