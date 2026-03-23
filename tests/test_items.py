@@ -24,11 +24,11 @@ def test_all_tracks(app: Flask, conn: Connection) -> None:
         items = get_items(
             search_criteria,
             sort_criteria,
-            "tracks",
             conn.cursor(),
             artist_id=None,
             album_id=None,
             unrated=None,
+            query_type="tracks",
         )
     assert isinstance(items, list)
     assert len(items) == 9
@@ -43,11 +43,11 @@ def test_all_artists(app: Flask, conn: Connection) -> None:
         items = get_items(
             search_criteria,
             sort_criteria,
-            "artists",
             conn.cursor(),
             artist_id=None,
             album_id=None,
             unrated=None,
+            query_type="artists",
         )
     assert isinstance(items, list)
     assert len(items) == 3
@@ -62,11 +62,11 @@ def test_all_albums(app: Flask, conn: Connection) -> None:
         items = get_items(
             search_criteria,
             sort_criteria,
-            "albums",
             conn.cursor(),
             artist_id=None,
             album_id=None,
             unrated=None,
+            query_type="albums",
         )
     assert isinstance(items, list)
     assert len(items) == 3

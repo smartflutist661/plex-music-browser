@@ -127,9 +127,7 @@ def generate_plots() -> str | Response:
         .rename("total_by_month")
         .reset_index()
     )
-    print(total_by_month)
     grouped_by_month_and_rating = grouped_by_month_and_rating.merge(total_by_month, on="month")
-    print(grouped_by_month_and_rating)
 
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     color_points = numpy.linspace(0, 1, 10)
@@ -137,7 +135,6 @@ def generate_plots() -> str | Response:
     for rating, rating_df in grouped_by_month_and_rating.groupby("rating"):
         assert isinstance(rating, int), "Rating column is not an integer"
         color = colors[rating - 1]
-        print(rating_df)
         fig.add_trace(
             go.Bar(
                 x=rating_df["month"],

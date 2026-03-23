@@ -6,6 +6,7 @@ requires-python = ">=3.11"
 
 dependencies = [
     "flask~=3.0",
+    "numpy~=2.3",
     "pandas~=3.0",
     "plotly~=6.6",
     "pydantic~=2.10",

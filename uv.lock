@@ -467,6 +467,7 @@ version = "0.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "flask" },
+    { name = "numpy" },
     { name = "pandas" },
     { name = "plotly" },
     { name = "pydantic" },
@@ -488,6 +489,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "flask", specifier = "~=3.0" },
+    { name = "numpy", specifier = "~=2.3" },
     { name = "pandas", specifier = "~=3.0" },
     { name = "plotly", specifier = "~=6.6" },
     { name = "pydantic", specifier = "~=2.10" },
