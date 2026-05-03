@@ -58,33 +58,9 @@ tr a:hover {
 	cursor: pointer;
 }
 
-.book a {
-	text-decoration: none;
-}
-
-.book a:hover {
-	text-decoration: underline;
-	cursor: pointer;
-}
-
-.book {
-	display: grid;
-	justify-content: center;
-}
-
-.book h4,
-.book h5 {
-	text-align: center;
-}
 
 .container {
 	padding-bottom: 2em;
-}
-
-.book img {
-	display: block;
-	margin-left: auto;
-	margin-right: auto;
 }
 
 td ul {
