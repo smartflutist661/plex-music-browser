@@ -30,6 +30,8 @@ from plex_music_browser.pagination import paginate
 from plex_music_browser.plotting import (
     MONTH_DATA,
     generate_stats_page,
+    get_albums_rated_this_year,
+    populate_month_data,
 )
 from plex_music_browser.queries.queries import (
     QueryType,
@@ -187,7 +189,16 @@ def data() -> TracksResponse | ArtistsResponse | AlbumsResponse | Response:
 
 @APP.route("/api/datatables-month")
 def month_data() -> list[dict[str, Any]] | Response:
-    month_album_data = MONTH_DATA["month_data"][
-        request.args.get("month", "missing month", type=str)
-    ]
+    try:
+        month_album_data = MONTH_DATA["month_data"][
+            request.args.get("month", "missing month", type=str)
+        ]
+    except KeyError:
+        rated_albums = get_albums_rated_this_year()
+        if isinstance(rated_albums, Response):
+            return rated_albums
+        populate_month_data(rated_albums)
+        month_album_data = MONTH_DATA["month_data"][
+            request.args.get("month", "missing month", type=str)
+        ]
     return [item.model_dump() for item in month_album_data]
