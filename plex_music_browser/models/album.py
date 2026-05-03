@@ -1,4 +1,7 @@
-from datetime import datetime
+from datetime import (
+    datetime,
+    timedelta,
+)
 from typing import (
     Any,
     Optional,
@@ -22,6 +25,8 @@ class Album(BaseModel):
     last_rated_at: Optional[datetime]
     genres: list[str]
     styles: list[str]
+    length: timedelta
+    avg_track_rating: Optional[float]
 
     @field_validator("genres", "styles", mode="plain")
     @classmethod
@@ -35,3 +40,12 @@ class Album(BaseModel):
         if dt is None:
             return None
         return int(dt.timestamp() * 1000)
+
+    @field_serializer("length")
+    def serialize_td(self, td: timedelta, _: Any) -> int:
+        return int(td.total_seconds() * 1000)
+
+    @field_validator("length", mode="before")
+    @classmethod
+    def deserialize_td(cls, val: int) -> timedelta:
+        return timedelta(milliseconds=val)

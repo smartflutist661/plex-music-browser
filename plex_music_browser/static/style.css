@@ -111,3 +111,12 @@ td ul {
 	border: 1px solid #ccc;
 	border-top: none;
 }
+
+.plotly .hoverlayer .hovertext .name {
+	fill: black !important;
+}
+
+.plotly-graph-div {
+	height: 400px !important;
+	overflow-y: scroll;
+}

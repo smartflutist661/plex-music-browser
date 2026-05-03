@@ -11,20 +11,38 @@
 <script src="https://cdn.datatables.net/plug-ins/2.3.7/features/deepLink/dataTables.deepLink.min.js"></script>
 {% block scripts %}
 <script>
+	$(document).ready(function () {
+		// On load, get tab we want to be active
+		var tablinks = document.getElementsByClassName("tablink");
+		for (let tablink of tablinks) {
+			if (tablink.classList.contains("active")) {
+				var activeMonth = tablink.dataset.month;
+			}
+		}
+		// Hide all other tabs, to hide tab we're moving away from
+		var tabcontent = document.getElementsByClassName("tabcontent");
+		for (let tab of tabcontent) {
+			if (tab.id !== activeMonth) {
+				tab.style.display = "none";
+			}
+		}
+	})
+
 	function openMonth(evt, month) {
 		// Hide all tabs, to hide tab we're moving away from
 		var tabcontent = document.getElementsByClassName("tabcontent");
-		for (var i = 0; i < tabcontent.length; i++) {
-			tabcontent[i].style.display = "none";
+		for (let tab of tabcontent) {
+			tab.style.display = "none";
 		}
 		var tablinks = document.getElementsByClassName("tablink");
-		for (var i = 0; i < tablinks.length; i++) {
-			tablinks[i].classList.remove("active");
+		for (let tablink of tablinks) {
+			tablink.classList.remove("active");
 		}
 
 		// Show the new tab, and add an "active" class to the button that opened the tab
 		document.getElementById(month).style.display = "block";
 		evt.currentTarget.classList.add("active");
+		$.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
 	} 
 </script>
 {% endblock %}

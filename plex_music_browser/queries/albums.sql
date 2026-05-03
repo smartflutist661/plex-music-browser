@@ -27,11 +27,17 @@ albums AS (
         artist.title as artist,
         artist.title_sort as artist_sort,
         genres.genres as genres,
-        styles.styles as styles
+        styles.styles as styles,
+        sum(track_media.duration) as 'length',
+        avg(track_mis.rating) as avg_track_rating
     from metadata_items album
     join metadata_items artist on album.parent_id = artist.id
+    join metadata_items track on track.parent_id = album.id
+    join media_items track_media on track.id = track_media.metadata_item_id
     left join metadata_item_settings mis on album.guid = mis.guid
+    left join metadata_item_settings track_mis on track.guid = track_mis.guid
     left join genres on genres.metadata_item_id = album.id
     left join styles on styles.metadata_item_id = album.id
     where album.metadata_type = 9
+    group by album.id
 )

@@ -1,6 +1,7 @@
 {% extends "table_standalone.html" %}
 
 {% block table %}
+<h2>Rated Albums</h2>
 <table id="{{ month }}-table">
 	<thead>
 		<tr>
@@ -8,9 +9,11 @@
 			<th>Album</th>
 			<th>Artist</th>
 			<th>Rating</th>
+			<th>Avg Track Rating</th>
 			<th>Rated At</th>
 			<th>Genres</th>
 			<th>Styles</th>
+			<th>Album Length</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -21,103 +24,159 @@
 {% block scripts %}
 <script>
 	$(document).ready(function () {
-		var config = {
+		var baseConfig = {
 			ajax: {
 				url: "api/datatables-month",
 				data: {
 					month: "{{ month }}",
 				},
-				dataSrc: "",
 			},
 			lengthChange: true,
-			columns: [
-				{
-					data: "cover",
-					orderable: false,
-					searchable: false,
-					render: function (_, __, row, ___) {
-						return row.cover ?
-							"<a href={{ url_for('tracks') }}?id=" + row.id + "><img src=data:image/png;base64," + row.cover.replace(/[|\n\r]/gm, "") + " width=100px /></a>"
-							: "No Cover Available"
-					}
-				},
-				{
-					data: "album",
-					render: function (_, __, row, ___) {
-						return "<a href={{ url_for('albums') }}?id=" + row.id + ">" + row.album + "</a>"
-					}
-				},
-				{
-					data: "artist",
-					render: function (_, __, row, ___) {
-						return "<a href={{ url_for('artists') }}?id=" + row.artist_id + ">" + row.artist + "</a>"
-					}
-				},
-				{ data: "rating", searchable: false },
-				{
-					data: "last_rated_at",
-					searchable: false,
-					render: function (_, type, row, ___) {
-						if (type === "sort") {
-							return row.last_rated_at;
-						}
-						if (!row.last_rated_at) {
-							return null;
-						}
-						return new Date(row.last_rated_at).toLocaleString(undefined, {
-							weekday: "short",
-							year: "numeric",
-							month: "2-digit",
-							day: "2-digit",
-							hour: "2-digit",
-							minute: "2-digit",
-							hourCycle: "h23",
-							timeZoneName: "short",
-						});
-					}
-				},
-				{
-					data: "genres",
-					orderable: false,
-					render: function (_, __, row, ___) {
-						if (!row.genres) {
-							return null
-						}
-						var cell = "<ul>";
-						for (const genre of row.genres) {
-							cell += "<li>" + genre + "</li>";
-						}
-						cell += "</ul>"
-						return cell;
-					}
-				},
-				{
-					data: "styles",
-					orderable: false,
-					render: function (_, __, row, ___) {
-						if (!row.styles) {
-							return null
-						}
-						var cell = "<ul>";
-						for (const style of row.styles) {
-							cell += "<li>" + style + "</li>";
-						}
-						cell += "</ul>"
-						return cell;
-					}
-				},
-			],
 			order: [
 				[3, 'desc'],
 				[2, 'asc'],
 				[1, 'asc']
 			],
 			deferRender: true,
+			scrollX: true,
 		};
-		var table = $('#{{ month }}-table').DataTable(
-			config
+		var monthCols = [
+			{
+				data: "cover",
+				orderable: false,
+				searchable: false,
+				render: function (_, __, row, ___) {
+					return row.cover ?
+						"<a href={{ url_for('tracks') }}?id=" + row.id + "><img src=data:image/png;base64," + row.cover.replace(/[|\n\r]/gm, "") + " width=100px /></a>"
+						: "No Cover Available"
+				}
+			},
+			{
+				data: "album",
+				render: function (_, __, row, ___) {
+					return "<a href={{ url_for('albums') }}?id=" + row.id + ">" + row.album + "</a>"
+				}
+			},
+			{
+				data: "artist",
+				render: function (_, __, row, ___) {
+					return "<a href={{ url_for('artists') }}?id=" + row.artist_id + ">" + row.artist + "</a>"
+				}
+			},
+			{ data: "rating", type: "num", searchable: false },
+			{
+				data: "avg_track_rating",
+				type: "num",
+				searchable: false,
+				render: function (_, type, row, ___) {
+					if (type === "sort") {
+						return row.avg_track_rating;
+					}
+					if (!row.avg_track_rating) {
+						return null;
+					}
+					return +row.avg_track_rating.toFixed(2);
+				}
+			},
+			{
+				data: "last_rated_at",
+				// For sorting purposes
+				type: "num",
+				searchable: false,
+				render: function (_, type, row, ___) {
+					if (type === "sort") {
+						return row.last_rated_at;
+					}
+					if (!row.last_rated_at) {
+						return null;
+					}
+					return new Date(row.last_rated_at).toLocaleString(undefined, {
+						weekday: "short",
+						year: "numeric",
+						month: "2-digit",
+						day: "2-digit",
+						hour: "2-digit",
+						minute: "2-digit",
+						hourCycle: "h23",
+						timeZoneName: "short",
+					});
+				}
+			},
+			{
+				data: "genres",
+				orderable: false,
+				render: function (_, __, row, ___) {
+					if (!row.genres) {
+						return null
+					}
+					var cell = "<ul>";
+					for (const genre of row.genres) {
+						cell += "<li>" + genre + "</li>";
+					}
+					cell += "</ul>"
+					return cell;
+				}
+			},
+			{
+				data: "styles",
+				orderable: false,
+				render: function (_, __, row, ___) {
+					if (!row.styles) {
+						return null
+					}
+					var cell = "<ul>";
+					for (const style of row.styles) {
+						cell += "<li>" + style + "</li>";
+					}
+					cell += "</ul>"
+					return cell;
+				}
+			},
+			{
+				data: "length",
+				// For sorting purposes
+				type: "num",
+				searchable: false,
+				render: function (_, type, row, ___) {
+					var length = row.length;
+					if (type === "sort") {
+						return length;
+					}
+
+					var days = Math.floor(length / (1000 * 60 * 60 * 24));
+					var hours = Math.floor(length / (1000 * 60 * 60) % 24);
+					// Seems like the only way to conditionally display minutes & seconds
+					var minutes = 0;
+					var seconds = 0;
+					if (days === 0) {
+						minutes = Math.floor((length / (1000 * 60) % 60));
+						if (hours === 0) {
+							seconds = Math.floor((length / 1000) % 60);
+						}
+					}
+
+					return new Intl.DurationFormat(undefined, {
+						style: "narrow",
+					}).format(
+						{
+							days: days,
+							hours: hours,
+							minutes: minutes,
+							seconds: seconds,
+						}
+					);
+				}
+			},
+		]
+
+		var monthConfig = structuredClone(baseConfig)
+		monthConfig.ajax.dataSrc = "";
+		monthConfig.columns = monthCols;
+		console.log(monthConfig);
+		var monthTable = $('#{{ month }}-table').DataTable(
+			monthConfig
 		);
-		table.on('responsive-resize', function (_, __, ____) {
+		monthTable.on('responsive-resize', function (_, __, ____) {
 			$('tr').each(function () { $(this).find('td:visible:last').addClass('last-visible-td') });
 		});
 	});
