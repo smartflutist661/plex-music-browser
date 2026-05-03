@@ -3,7 +3,29 @@
 {% block content %}
 <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.4.0.min.js"
 	integrity="sha256-KEmPoupLpFyGMyGAiOsiNDbKDKAvxXAn/W+oQa0ZAfk=" crossorigin="anonymous"></script>
-{{plot | safe}}
-{% endblock %}
+<div id="container">
+	{{ stats_page | safe }}
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/v/bs5/jq-3.7.0/dt-2.1.8/date-1.5.4/r-3.0.3/sb-1.8.1/datatables.min.js"></script>
+<script src="https://cdn.datatables.net/plug-ins/2.3.7/features/deepLink/dataTables.deepLink.min.js"></script>
+{% block scripts %}
+<script>
+	function openMonth(evt, month) {
+		// Hide all tabs, to hide tab we're moving away from
+		var tabcontent = document.getElementsByClassName("tabcontent");
+		for (var i = 0; i < tabcontent.length; i++) {
+			tabcontent[i].style.display = "none";
+		}
+		var tablinks = document.getElementsByClassName("tablink");
+		for (var i = 0; i < tablinks.length; i++) {
+			tablinks[i].classList.remove("active");
+		}
 
-{% block scripts %}{% endblock %}
+		// Show the new tab, and add an "active" class to the button that opened the tab
+		document.getElementById(month).style.display = "block";
+		evt.currentTarget.classList.add("active");
+	} 
+</script>
+{% endblock %}
+{% endblock %}

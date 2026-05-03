@@ -2,6 +2,7 @@ import json
 import os
 from pathlib import Path
 from typing import (
+    Any,
     Optional,
     cast,
 )
@@ -26,7 +27,10 @@ from plex_music_browser.models.datatable_responses import (
     TracksResponse,
 )
 from plex_music_browser.pagination import paginate
-from plex_music_browser.plotting import generate_plots
+from plex_music_browser.plotting import (
+    MONTH_DATA,
+    generate_stats_page,
+)
 from plex_music_browser.queries.queries import (
     QueryType,
     get_by_id,
@@ -71,10 +75,10 @@ def certbot(token: str) -> str:
 
 @APP.route("/")
 def index() -> str | Response:
-    plots = generate_plots()
-    if isinstance(plots, Response):
-        return plots
-    return render_template("index.html", title="Home", plot=plots)
+    stats_page = generate_stats_page()
+    if isinstance(stats_page, Response):
+        return stats_page
+    return render_template("index.html", title="Home", stats_page=stats_page)
 
 
 @APP.route("/tracks")
@@ -179,3 +183,11 @@ def data() -> TracksResponse | ArtistsResponse | AlbumsResponse | Response:
         "recordsTotal": total,
         "draw": request.args.get("draw", type=int),
     }
+
+
+@APP.route("/api/datatables-month")
+def month_data() -> list[dict[str, Any]] | Response:
+    month_album_data = MONTH_DATA["month_data"][
+        request.args.get("month", "missing month", type=str)
+    ]
+    return [item.model_dump() for item in month_album_data]
