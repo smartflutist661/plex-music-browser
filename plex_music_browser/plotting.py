@@ -8,6 +8,7 @@ from datetime import datetime
 import numpy
 import pandas
 import plotly.graph_objects as go
+import tzlocal
 from flask import Response
 from plotly.express.colors import sample_colorscale
 from plotly.subplots import make_subplots
@@ -102,7 +103,13 @@ def generate_plots() -> str | Response:
         return rated_albums
 
     albums_df = pandas.DataFrame(item.model_dump() for item in rated_albums)
-    albums_df["month"] = albums_df["last_rated_at"].dt.strftime("%b")
+    local_tz = tzlocal.get_localzone_name()
+    albums_df["month"] = (
+        pandas.to_datetime(albums_df["last_rated_at"], unit="ms")
+        .dt.tz_localize("UTC")
+        .dt.tz_convert(local_tz)
+        .dt.strftime("%b")
+    )
 
     grouped_by_month_and_rating = (
         albums_df.groupby(by=["month", "rating"])

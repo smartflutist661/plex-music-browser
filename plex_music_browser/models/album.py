@@ -1,8 +1,12 @@
 from datetime import datetime
-from typing import Optional
+from typing import (
+    Any,
+    Optional,
+)
 
 from pydantic import (
     BaseModel,
+    field_serializer,
     field_validator,
 )
 
@@ -25,3 +29,9 @@ class Album(BaseModel):
         if data is None or len(data) == 0:
             return []
         return str(data).split("|")
+
+    @field_serializer("last_rated_at")
+    def serialize_dt(self, dt: Optional[datetime], _: Any) -> Optional[int]:
+        if dt is None:
+            return None
+        return int(dt.timestamp() * 1000)
