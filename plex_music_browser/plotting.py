@@ -7,6 +7,7 @@ from collections.abc import (
 )
 from datetime import datetime
 from typing import TypedDict
+from zoneinfo import ZoneInfo
 
 import numpy
 import pandas
@@ -78,12 +79,14 @@ class MonthDataCache(TypedDict):
 
 MONTH_DATA: MonthDataCache = {"last_seen_count": 0, "month_data": {}}
 
+LOCAL_TZ = tzlocal.get_localzone_name()
+
 
 def populate_month_data(rated_albums: Collection[Album]) -> None:
     month_data = defaultdict(list)
     for album in rated_albums:
         assert album.last_rated_at is not None
-        month_data[album.last_rated_at.strftime("%b")].append(album)
+        month_data[album.last_rated_at.astimezone(ZoneInfo(LOCAL_TZ)).strftime("%b")].append(album)
     MONTH_DATA["month_data"] = month_data
     MONTH_DATA["last_seen_count"] = len(rated_albums)
 
@@ -244,11 +247,10 @@ def generate_stats_page() -> str | Response:
         populate_month_data(rated_albums)
 
     albums_df = pandas.DataFrame(item.model_dump() for item in rated_albums)
-    local_tz = tzlocal.get_localzone_name()
     albums_df["month"] = (
         pandas.to_datetime(albums_df["last_rated_at"], unit="ms")
         .dt.tz_localize("UTC")
-        .dt.tz_convert(local_tz)
+        .dt.tz_convert(LOCAL_TZ)
         .dt.strftime("%b")
     )
 
