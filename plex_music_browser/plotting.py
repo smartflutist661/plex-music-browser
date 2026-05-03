@@ -273,7 +273,7 @@ def format_timedelta(td: timedelta) -> str:
 
 def generate_month_summary_plot(df: pandas.DataFrame, col: str, title: str) -> str:
     df.sort_values(by=["count", "avg_rating", col], inplace=True)
-    plot_height = 150 + (len(df) * 20)
+    plot_height = max(400, 150 + (len(df) * 20))
 
     colors = list(islice(cycle(plotly.express.colors.qualitative.Plotly), len(df)))
 
