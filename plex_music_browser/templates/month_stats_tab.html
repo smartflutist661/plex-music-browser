@@ -57,9 +57,12 @@
 				{
 					data: "last_rated_at",
 					searchable: false,
-					render: function (_, __, row, ___) {
+					render: function (_, type, row, ___) {
+						if (type === "sort") {
+							return row.last_rated_at;
+						}
 						if (!row.last_rated_at) {
-							return null
+							return null;
 						}
 						return new Date(row.last_rated_at).toLocaleString(undefined, {
 							weekday: "short",
@@ -70,7 +73,6 @@
 							minute: "2-digit",
 							hourCycle: "h23",
 							timeZoneName: "short",
-							// timeStyle: "short"
 						});
 					}
 				},
