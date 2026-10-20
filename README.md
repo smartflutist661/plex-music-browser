@@ -35,15 +35,8 @@ You should pin the Python version your `wsgi_mod` is using, which can be found i
 Place a `wsgi-file` with the following contents in a folder the Apache daemon has access to, e.g. `/var/www/html`:
 
 ```
-import sys
-
-sys.path.insert(0, '</absolute/path/to/this/repo>')
-sys.path.insert(0, '</absolute/path/to/this/repo>/.venv/lib/python<version>/site-packages')
-
 from plex_music_browser import APP as application
 ```
-
-The paths assume you have used `uv` to install dependencies.
 
 Enable the Apache WSGI module: `a2enmod wsgi`
 
@@ -56,6 +49,9 @@ Create a configuration file in `/etc/apache2/sites-available/` with contents lik
 </VirtualHost>
 
 <VirtualHost *:443>
+        WSGIDaemonProcess music python-home=</absolute/path/to/this/repo>/.venv python-path=</absolute/path/to/this/repo>
+        WSGIProcessGroup music
+        WSGIApplicationGroup %{GLOBAL}
         WSGIScriptAlias / <your-webroot>/<wsgi-file>
         ServerName <your-server-domain>
 
@@ -74,6 +70,8 @@ Create a configuration file in `/etc/apache2/sites-available/` with contents lik
         CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
 ```
+
+The paths assume you have used `uv` to install dependencies.
 
 This configuration assumes you want to enable SSL and prevent plain HTTP connections.
 This application supports webroot-based ACME HTTP01 challenges if you're unable to complete any other types of challenge.
